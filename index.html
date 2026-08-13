@@ -89,6 +89,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .f-item-busca{grid-column:1/-1}
 .f-item select,.f-item input[type=month],.f-item input[type=text]{background:#0b1424;border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;outline:none;width:100%;box-sizing:border-box;color-scheme:dark}
 .f-item select:focus,.f-item input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
+.f-checklist{background:#0b1424;border:1px solid var(--border);border-radius:8px;padding:5px;max-height:122px;overflow:auto}
+.f-check{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:6px;color:#c6d2e5;font-size:11.5px;cursor:pointer;line-height:1.25}
+.f-check:hover{background:#16233f;color:var(--txt)}
+.f-check input{width:15px;height:15px;accent-color:var(--acc);cursor:pointer;flex-shrink:0}
+.f-check input:checked+span{color:#e5ecf6;font-weight:700}
+.f-label small{font-weight:400;color:var(--dim);font-size:9px}
 .filtros-rodape{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);gap:10px}
 .filtros-rodape .btn-clear{padding:9px 14px;font-size:12px}
 .btn-aplicar{background:linear-gradient(135deg,#0e7490,#0891b2);border:none;color:#eaf7fb;border-radius:10px;padding:10px 26px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:.18s;box-shadow:0 4px 14px rgba(8,145,178,.3)}
@@ -268,17 +274,17 @@ body.mod-score .faixa-status{display:none}
         </div>
         <p class="filtros-dica">Escolha os filtros e clique em <b>Aplicar</b> — fechar a janela descarta as alterações.</p>
         <div class="filtros-grid">
-          <label class="f-item"><span class="f-label">Empresa <small>(Ctrl/Cmd para várias)</small></span><select id="f-emp" multiple size="4" onchange="setDraftMulti('emp',this)"></select></label>
-          <label class="f-item"><span class="f-label">UF <small>(Ctrl/Cmd para várias)</small></span><select id="f-uf" multiple size="4" onchange="setDraftMulti('uf',this)"></select></label>
-          <label class="f-item"><span class="f-label">Cidade <small>(Ctrl/Cmd para várias)</small></span><select id="f-cidade" multiple size="4" onchange="setDraftMulti('cidade',this)"></select></label>
-          <label class="f-item"><span class="f-label">Grupo de serviços <small>(Ctrl/Cmd para várias)</small></span><select id="f-grp" multiple size="4" onchange="setDraftMulti('grp',this)"></select></label>
-          <label class="f-item"><span class="f-label">Grupo Macro <small>(Ctrl/Cmd para várias)</small></span><select id="f-gm" multiple size="4" onchange="setDraftMulti('gm',this)"></select></label>
-          <label class="f-item"><span class="f-label">Regional <small>(Ctrl/Cmd para várias)</small></span><select id="f-reg" multiple size="4" onchange="setDraftMulti('reg',this)"></select></label>
-          <label class="f-item"><span class="f-label">Plano <small>(Ctrl/Cmd para várias)</small></span><select id="f-plano" multiple size="4" onchange="setDraftMulti('plano',this)"></select></label>
-          <label class="f-item"><span class="f-label">Tecnologia <small>(Ctrl/Cmd para várias)</small></span><select id="f-tec" multiple size="4" onchange="setDraftMulti('tec',this)"></select></label>
-          <label class="f-item"><span class="f-label">Vendedor <small>(Ctrl/Cmd para várias)</small></span><select id="f-vend" multiple size="4" onchange="setDraftMulti('vend',this)"></select></label>
-          <label class="f-item"><span class="f-label">Status do serviço <small>(Ctrl/Cmd para várias)</small></span><select id="f-st" multiple size="4" onchange="setDraftMulti('st',this)"></select></label>
-          <label class="f-item"><span class="f-label">Faixa de atraso <small>(Ctrl/Cmd para várias)</small></span><select id="f-atraso" multiple size="4" onchange="setDraftMulti('atraso',this)"></select></label>
+          <label class="f-item"><span class="f-label">Empresa</span><div id="f-emp" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">UF</span><div id="f-uf" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Cidade</span><div id="f-cidade" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Grupo de serviços</span><div id="f-grp" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Grupo Macro</span><div id="f-gm" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Regional</span><div id="f-reg" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Plano</span><div id="f-plano" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Tecnologia</span><div id="f-tec" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Vendedor</span><div id="f-vend" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Status do serviço</span><div id="f-st" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Faixa de atraso</span><div id="f-atraso" class="f-checklist"></div></label>
           <label class="f-item f-item-busca"><span class="f-label">🔎 Buscar cliente</span><input type="text" id="f-busca" placeholder="Nome, CPF/CNPJ, telefone…" oninput="setDraft('busca',this.value)"></label>
         </div>
         <div class="filtros-rodape">
@@ -455,7 +461,7 @@ function setFiltro(k,v){ state[k]=v; state.page=0; renderAtual(); }
 function limparFiltros(){
   ['emp','uf','cidade','grp','gm','reg','plano','tec','vend','st','atraso'].forEach(k=>state[k]=[]);
   state.busca='';
-  document.querySelectorAll('#filtros-overlay select').forEach(s=>Array.from(s.options).forEach(o=>o.selected=false));
+  document.querySelectorAll('#filtros-overlay input[type=checkbox]').forEach(c=>c.checked=false);
   document.getElementById('f-busca').value='';
   state.page=0; renderAtual();
 }
@@ -464,11 +470,11 @@ const FILTRO_IDS=[['f-emp','emp'],['f-uf','uf'],['f-cidade','cidade'],['f-grp','
 let draft={};
 function abrirFiltros(){
   draft={...state};
-  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(!el) return; if(el.multiple){const vals=Array.isArray(draft[k])?draft[k]:draft[k]?[draft[k]]:[]; Array.from(el.options).forEach(o=>o.selected=vals.includes(o.value));} else el.value=draft[k]||'';});
+  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(!el) return; const vals=Array.isArray(draft[k])?draft[k]:draft[k]?[draft[k]]:[]; el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=vals.includes(c.value));});
   document.getElementById('filtros-overlay').style.display='flex';
 }
 function setDraft(k,v){ draft[k]=v; }
-function setDraftMulti(k,el){ draft[k]=Array.from(el.selectedOptions).map(o=>o.value).filter(Boolean); }
+function setDraftMulti(k,el){ draft[k]=Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(c=>c.value).filter(Boolean); }
 function aplicarFiltros(){
   Object.assign(state,draft);
   state.page=0; fecharFiltros(); renderAtual();
@@ -476,7 +482,7 @@ function aplicarFiltros(){
 function fecharFiltros(){ document.getElementById('filtros-overlay').style.display='none'; }
 function limparDraft(){
   Object.keys(draft).forEach(k=>draft[k]=Array.isArray(state[k])?[]:'');
-  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(!el) return; if(el.multiple) Array.from(el.options).forEach(o=>o.selected=false); else el.value='';});
+  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(!el) return; el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);});
 }
 function atualizarBadge(){
   const n=FILTRO_IDS.reduce((n,[,k])=>n+(Array.isArray(state[k])?state[k].length:(state[k]?1:0)),0);
@@ -512,24 +518,24 @@ function preencherFiltros(){
   const empEl=document.getElementById('f-emp');
   if(empEl){
     const emps=(RESUMO.empresas||[]).filter(e=>e&&e.emp);
-    empEl.innerHTML='<option value="">todas</option>'+emps.map(e=>`<option value="${esc(e.emp)}">${esc(e.nome||e.emp)}${DADOS.some(x=>x.emp===e.emp)?'':' — sem dados'}</option>`).join('');
+    empEl.innerHTML=emps.map(e=>`<label class="f-check"><input type="checkbox" value="${esc(e.emp)}" onchange="setDraftMulti('emp',document.getElementById('f-emp'))"><span>${esc(e.nome||e.emp)}${DADOS.some(x=>x.emp===e.emp)?'':' — sem dados'}</span></label>`).join('');
   }
   const uf=new Set(), cid=new Set(), grp=new Set(), plano=new Set(), tec=new Set(), vend=new Set();
   DADOS.forEach(x=>{uf.add(x.uf);cid.add(x.cid);grp.add(x.grp);plano.add(x.plano);tec.add(x.tec);if(x.vend&&x.vend!=='—')vend.add(x.vend);});
-  const opt=(set,sel,label)=>{const el=document.getElementById(sel);el.innerHTML=`<option value="">${label}</option>`+[...set].sort().map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');};
+  const opt=(set,sel,label)=>{const el=document.getElementById(sel);el.innerHTML=[...set].filter(Boolean).sort().map(v=>`<label class="f-check"><input type="checkbox" value="${esc(v)}" onchange="setDraftMulti('${sel.slice(2)}',document.getElementById('${sel}'))"><span>${esc(v)}</span></label>`).join('');};
   opt(uf,'f-uf','todas'); opt(cid,'f-cidade','todas'); opt(grp,'f-grp','todos');
   const segEl=document.getElementById('f-gm');
-  segEl.innerHTML='<option value="">todos</option>'+['B2C','B2B','OUTROS'].map(s=>`<option value="${s}">${s}</option>`).join('');
+  segEl.innerHTML=['B2C','B2B','OUTROS'].map(s=>`<label class="f-check"><input type="checkbox" value="${s}" onchange="setDraftMulti('gm',document.getElementById('f-gm'))"><span>${s}</span></label>`).join('');
   const regEl=document.getElementById('f-reg');
   const regs=[...new Set(DADOS.map(x=>x.reg).filter(Boolean))].sort();
-  regEl.innerHTML='<option value="">todas</option>'+regs.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  regEl.innerHTML=regs.map(r=>`<label class="f-check"><input type="checkbox" value="${esc(r)}" onchange="setDraftMulti('reg',document.getElementById('f-reg'))"><span>${esc(r)}</span></label>`).join('');
   opt(plano,'f-plano','todos'); opt(tec,'f-tec','todas');
   const vEl=document.getElementById('f-vend');
-  vEl.innerHTML='<option value="">todos</option>'+[...vend].sort().map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+'<option value="__sem__">(sem vendedor)</option>';
+  vEl.innerHTML=[...vend].sort().map(v=>`<label class="f-check"><input type="checkbox" value="${esc(v)}" onchange="setDraftMulti('vend',document.getElementById('f-vend'))"><span>${esc(v)}</span></label>`).join('')+'<label class="f-check"><input type="checkbox" value="__sem__" onchange="setDraftMulti(\'vend\',document.getElementById(\'f-vend\'))"><span>(sem vendedor)</span></label>';
   const stEl=document.getElementById('f-st');
-  stEl.innerHTML='<option value="">todos</option>'+[...new Set(DADOS.map(x=>x.st))].sort().map(s=>`<option value="${esc(s)}">${esc(ATIVO_LABEL[s]||s)}</option>`).join('');
+  stEl.innerHTML=[...new Set(DADOS.map(x=>x.st))].sort().map(s=>`<label class="f-check"><input type="checkbox" value="${s}" onchange="setDraftMulti('st',document.getElementById('f-st'))"><span>${esc(ATIVO_LABEL[s]||s)}</span></label>`).join('');
   const atEl=document.getElementById('f-atraso');
-  atEl.innerHTML='<option value="">todas (1–180+d)</option>'+FAIXAS.map(([l])=>`<option value="${l}">${l}</option>`).join('');
+  atEl.innerHTML=FAIXAS.map(([l])=>`<label class="f-check"><input type="checkbox" value="${l}" onchange="setDraftMulti('atraso',document.getElementById('f-atraso'))"><span>${l}</span></label>`).join('');
 }
 
 /* ---------- base de gráficos ECharts ---------- */
