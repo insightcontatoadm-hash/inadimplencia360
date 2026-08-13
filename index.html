@@ -268,17 +268,17 @@ body.mod-score .faixa-status{display:none}
         </div>
         <p class="filtros-dica">Escolha os filtros e clique em <b>Aplicar</b> — fechar a janela descarta as alterações.</p>
         <div class="filtros-grid">
-          <label class="f-item"><span class="f-label">Empresa</span><select id="f-emp" onchange="setDraft('emp',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">UF</span><select id="f-uf" onchange="setDraft('uf',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Cidade</span><select id="f-cidade" onchange="setDraft('cidade',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Grupo de serviços</span><select id="f-grp" onchange="setDraft('grp',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Grupo Macro</span><select id="f-gm" onchange="setDraft('gm',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Regional</span><select id="f-reg" onchange="setDraft('reg',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Plano</span><select id="f-plano" onchange="setDraft('plano',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Tecnologia</span><select id="f-tec" onchange="setDraft('tec',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Vendedor</span><select id="f-vend" onchange="setDraft('vend',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Status do serviço</span><select id="f-st" onchange="setDraft('st',this.value)"></select></label>
-          <label class="f-item"><span class="f-label">Faixa de atraso</span><select id="f-atraso" onchange="setDraft('atraso',this.value)"></select></label>
+          <label class="f-item"><span class="f-label">Empresa <small>(Ctrl/Cmd para várias)</small></span><select id="f-emp" multiple size="4" onchange="setDraftMulti('emp',this)"></select></label>
+          <label class="f-item"><span class="f-label">UF <small>(Ctrl/Cmd para várias)</small></span><select id="f-uf" multiple size="4" onchange="setDraftMulti('uf',this)"></select></label>
+          <label class="f-item"><span class="f-label">Cidade <small>(Ctrl/Cmd para várias)</small></span><select id="f-cidade" multiple size="4" onchange="setDraftMulti('cidade',this)"></select></label>
+          <label class="f-item"><span class="f-label">Grupo de serviços <small>(Ctrl/Cmd para várias)</small></span><select id="f-grp" multiple size="4" onchange="setDraftMulti('grp',this)"></select></label>
+          <label class="f-item"><span class="f-label">Grupo Macro <small>(Ctrl/Cmd para várias)</small></span><select id="f-gm" multiple size="4" onchange="setDraftMulti('gm',this)"></select></label>
+          <label class="f-item"><span class="f-label">Regional <small>(Ctrl/Cmd para várias)</small></span><select id="f-reg" multiple size="4" onchange="setDraftMulti('reg',this)"></select></label>
+          <label class="f-item"><span class="f-label">Plano <small>(Ctrl/Cmd para várias)</small></span><select id="f-plano" multiple size="4" onchange="setDraftMulti('plano',this)"></select></label>
+          <label class="f-item"><span class="f-label">Tecnologia <small>(Ctrl/Cmd para várias)</small></span><select id="f-tec" multiple size="4" onchange="setDraftMulti('tec',this)"></select></label>
+          <label class="f-item"><span class="f-label">Vendedor <small>(Ctrl/Cmd para várias)</small></span><select id="f-vend" multiple size="4" onchange="setDraftMulti('vend',this)"></select></label>
+          <label class="f-item"><span class="f-label">Status do serviço <small>(Ctrl/Cmd para várias)</small></span><select id="f-st" multiple size="4" onchange="setDraftMulti('st',this)"></select></label>
+          <label class="f-item"><span class="f-label">Faixa de atraso <small>(Ctrl/Cmd para várias)</small></span><select id="f-atraso" multiple size="4" onchange="setDraftMulti('atraso',this)"></select></label>
           <label class="f-item f-item-busca"><span class="f-label">🔎 Buscar cliente</span><input type="text" id="f-busca" placeholder="Nome, CPF/CNPJ, telefone…" oninput="setDraft('busca',this.value)"></label>
         </div>
         <div class="filtros-rodape">
@@ -447,14 +447,15 @@ function faixaDeAtraso(d){
 }
 
 /* ---------- estado global ---------- */
-const state = {emp:'',uf:'',cidade:'',grp:'',gm:'',reg:'',plano:'',tec:'',vend:'',st:'',atraso:'',busca:'',sortKey:'vencido',sortDir:-1,page:0,pageSize:50};
+const state = {emp:[],uf:[],cidade:[],grp:[],gm:[],reg:[],plano:[],tec:[],vend:[],st:[],atraso:[],busca:'',sortKey:'vencido',sortDir:-1,page:0,pageSize:50};
 const abaAtiva = {estrategico:'visao',tatico:'aging',operacional:'fila'};
 let charts = {};
 
 function setFiltro(k,v){ state[k]=v; state.page=0; renderAtual(); }
 function limparFiltros(){
-  ['emp','uf','cidade','grp','gm','reg','plano','tec','vend','st','atraso','busca'].forEach(k=>state[k]='');
-  document.querySelectorAll('#filtros-modal select').forEach(s=>s.value='');
+  ['emp','uf','cidade','grp','gm','reg','plano','tec','vend','st','atraso'].forEach(k=>state[k]=[]);
+  state.busca='';
+  document.querySelectorAll('#filtros-overlay select').forEach(s=>Array.from(s.options).forEach(o=>o.selected=false));
   document.getElementById('f-busca').value='';
   state.page=0; renderAtual();
 }
@@ -463,21 +464,22 @@ const FILTRO_IDS=[['f-emp','emp'],['f-uf','uf'],['f-cidade','cidade'],['f-grp','
 let draft={};
 function abrirFiltros(){
   draft={...state};
-  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(el) el.value=draft[k]||'';});
+  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(!el) return; if(el.multiple){const vals=Array.isArray(draft[k])?draft[k]:draft[k]?[draft[k]]:[]; Array.from(el.options).forEach(o=>o.selected=vals.includes(o.value));} else el.value=draft[k]||'';});
   document.getElementById('filtros-overlay').style.display='flex';
 }
 function setDraft(k,v){ draft[k]=v; }
+function setDraftMulti(k,el){ draft[k]=Array.from(el.selectedOptions).map(o=>o.value).filter(Boolean); }
 function aplicarFiltros(){
   Object.assign(state,draft);
   state.page=0; fecharFiltros(); renderAtual();
 }
 function fecharFiltros(){ document.getElementById('filtros-overlay').style.display='none'; }
 function limparDraft(){
-  Object.keys(draft).forEach(k=>draft[k]='');
-  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(el) el.value='';});
+  Object.keys(draft).forEach(k=>draft[k]=Array.isArray(state[k])?[]:'');
+  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(!el) return; if(el.multiple) Array.from(el.options).forEach(o=>o.selected=false); else el.value='';});
 }
 function atualizarBadge(){
-  const n=FILTRO_IDS.filter(([,k])=>state[k]).length;
+  const n=FILTRO_IDS.reduce((n,[,k])=>n+(Array.isArray(state[k])?state[k].length:(state[k]?1:0)),0);
   const b=document.getElementById('f-badge'), btn=document.getElementById('btn-filtros'), limp=document.getElementById('btn-limpar-filtros');
   if(b) b.textContent=n?('• '+n):'';
   if(btn) btn.classList.toggle('ativo',n>0);
@@ -489,17 +491,18 @@ function renderAtual(){ atualizarBadge(); renderModulo(modAtivo()); }
 
 function filtrados(){
   let d = DADOS;
-  if(state.emp) d = d.filter(x=>x.emp===state.emp);
-  if(state.uf) d = d.filter(x=>x.uf===state.uf);
-  if(state.cidade) d = d.filter(x=>x.cid===state.cidade);
-  if(state.grp) d = d.filter(x=>x.grp===state.grp);
-  if(state.gm) d = d.filter(x=>x.gm===state.gm);
-  if(state.reg) d = d.filter(x=>x.reg===state.reg);
-  if(state.plano) d = d.filter(x=>x.plano===state.plano);
-  if(state.tec) d = d.filter(x=>x.tec===state.tec);
-  if(state.vend) d = state.vend==='__sem__' ? d.filter(x=>!x.vend||x.vend==='—') : d.filter(x=>x.vend===state.vend);
-  if(state.st) d = d.filter(x=>x.st===+state.st);
-  if(state.atraso) d = d.filter(x=>faixaDeAtraso(x.datraso)===state.atraso);
+  const has=(k,v)=>Array.isArray(state[k]) ? state[k].includes(String(v)) : state[k]===v;
+  if(state.emp.length) d = d.filter(x=>has('emp',x.emp));
+  if(state.uf.length) d = d.filter(x=>has('uf',x.uf));
+  if(state.cidade.length) d = d.filter(x=>has('cidade',x.cid));
+  if(state.grp.length) d = d.filter(x=>has('grp',x.grp));
+  if(state.gm.length) d = d.filter(x=>has('gm',x.gm));
+  if(state.reg.length) d = d.filter(x=>has('reg',x.reg));
+  if(state.plano.length) d = d.filter(x=>has('plano',x.plano));
+  if(state.tec.length) d = d.filter(x=>has('tec',x.tec));
+  if(state.vend.length) d = d.filter(x=>state.vend.includes('__sem__') && state.vend.length===1 ? (!x.vend||x.vend==='—') : state.vend.includes(x.vend)|| (state.vend.includes('__sem__')&&(!x.vend||x.vend==='—')));
+  if(state.st.length) d = d.filter(x=>state.st.includes(String(x.st)));
+  if(state.atraso.length) d = d.filter(x=>state.atraso.includes(faixaDeAtraso(x.datraso)));
   if(state.busca){ const q=state.busca.toLowerCase(); d = d.filter(x=>x.cli.toLowerCase().includes(q)); }
   return d;
 }
