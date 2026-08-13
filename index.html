@@ -285,6 +285,8 @@ body.mod-score .faixa-status{display:none}
           <label class="f-item"><span class="f-label">Vendedor</span><div id="f-vend" class="f-checklist"></div></label>
           <label class="f-item"><span class="f-label">Status do serviço</span><div id="f-st" class="f-checklist"></div></label>
           <label class="f-item"><span class="f-label">Faixa de atraso</span><div id="f-atraso" class="f-checklist"></div></label>
+          <label class="f-item"><span class="f-label">Período inicial do vencimento</span><input type="date" id="f-periodo-ini" onchange="setDraft('periodoIni',this.value)"></label>
+          <label class="f-item"><span class="f-label">Período final do vencimento</span><input type="date" id="f-periodo-fim" onchange="setDraft('periodoFim',this.value)"></label>
           <label class="f-item f-item-busca"><span class="f-label">🔎 Buscar cliente</span><input type="text" id="f-busca" placeholder="Nome, CPF/CNPJ, telefone…" oninput="setDraft('busca',this.value)"></label>
         </div>
         <div class="filtros-rodape">
@@ -453,24 +455,26 @@ function faixaDeAtraso(d){
 }
 
 /* ---------- estado global ---------- */
-const state = {emp:[],uf:[],cidade:[],grp:[],gm:[],reg:[],plano:[],tec:[],vend:[],st:[],atraso:[],busca:'',sortKey:'vencido',sortDir:-1,page:0,pageSize:50};
+const state = {emp:[],uf:[],cidade:[],grp:[],gm:[],reg:[],plano:[],tec:[],vend:[],st:[],atraso:[],periodoIni:'',periodoFim:'',busca:'',sortKey:'vencido',sortDir:-1,page:0,pageSize:50};
 const abaAtiva = {estrategico:'visao',tatico:'aging',operacional:'fila'};
 let charts = {};
 
 function setFiltro(k,v){ state[k]=v; state.page=0; renderAtual(); }
 function limparFiltros(){
   ['emp','uf','cidade','grp','gm','reg','plano','tec','vend','st','atraso'].forEach(k=>state[k]=[]);
-  state.busca='';
+  state.periodoIni=''; state.periodoFim=''; state.busca='';
   document.querySelectorAll('#filtros-overlay input[type=checkbox]').forEach(c=>c.checked=false);
   document.getElementById('f-busca').value='';
+  document.getElementById('f-periodo-ini').value='';
+  document.getElementById('f-periodo-fim').value='';
   state.page=0; renderAtual();
 }
 /* ---------- painel de filtros (janela central) ---------- */
-const FILTRO_IDS=[['f-emp','emp'],['f-uf','uf'],['f-cidade','cidade'],['f-grp','grp'],['f-gm','gm'],['f-reg','reg'],['f-plano','plano'],['f-tec','tec'],['f-vend','vend'],['f-st','st'],['f-atraso','atraso'],['f-busca','busca']];
+const FILTRO_IDS=[['f-emp','emp'],['f-uf','uf'],['f-cidade','cidade'],['f-grp','grp'],['f-gm','gm'],['f-reg','reg'],['f-plano','plano'],['f-tec','tec'],['f-vend','vend'],['f-st','st'],['f-atraso','atraso'],['f-periodo-ini','periodoIni'],['f-periodo-fim','periodoFim'],['f-busca','busca']];
 let draft={};
 function abrirFiltros(){
   draft={...state};
-  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(!el) return; const vals=Array.isArray(draft[k])?draft[k]:draft[k]?[draft[k]]:[]; el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=vals.includes(c.value));});
+  FILTRO_IDS.forEach(([id,k])=>{const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=Array.isArray(draft[k])&&draft[k].includes(el.value); else if(el.type==='text'||el.type==='date') el.value=draft[k]||''; else el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=(Array.isArray(draft[k])?draft[k]:[]).includes(c.value));});
   document.getElementById('filtros-overlay').style.display='flex';
 }
 function setDraft(k,v){ draft[k]=v; }
@@ -482,7 +486,7 @@ function aplicarFiltros(){
 function fecharFiltros(){ document.getElementById('filtros-overlay').style.display='none'; }
 function limparDraft(){
   Object.keys(draft).forEach(k=>draft[k]=Array.isArray(state[k])?[]:'');
-  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(!el) return; el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);});
+  FILTRO_IDS.forEach(([id])=>{const el=document.getElementById(id); if(!el) return; if(el.type==='text'||el.type==='date') el.value=''; else el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);});
 }
 function atualizarBadge(){
   const n=FILTRO_IDS.reduce((n,[,k])=>n+(Array.isArray(state[k])?state[k].length:(state[k]?1:0)),0);
@@ -509,6 +513,8 @@ function filtrados(){
   if(state.vend.length) d = d.filter(x=>state.vend.includes('__sem__') && state.vend.length===1 ? (!x.vend||x.vend==='—') : state.vend.includes(x.vend)|| (state.vend.includes('__sem__')&&(!x.vend||x.vend==='—')));
   if(state.st.length) d = d.filter(x=>state.st.includes(String(x.st)));
   if(state.atraso.length) d = d.filter(x=>state.atraso.includes(faixaDeAtraso(x.datraso)));
+  if(state.periodoIni) d = d.filter(x=>x.vma && x.vma>=state.periodoIni);
+  if(state.periodoFim) d = d.filter(x=>x.vma && x.vma<=state.periodoFim);
   if(state.busca){ const q=state.busca.toLowerCase(); d = d.filter(x=>x.cli.toLowerCase().includes(q)); }
   return d;
 }
