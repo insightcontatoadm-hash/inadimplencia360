@@ -247,6 +247,7 @@ body.mod-score .faixa-status{display:none}
       <div class="nav-item" data-mod="tatico"><span class="ico">📊</span> Tático</div>
       <div class="nav-item" data-mod="operacional"><span class="ico">🔍</span> Operacional</div>
       <div class="nav-item" data-mod="desempenho"><span class="ico">📈</span> Desempenho</div>
+      <div class="nav-item" data-mod="renegociacoes"><span class="ico">🔄</span> Renegociações</div>
       <div class="nav-label">DOCUMENTAÇÃO</div>
       <div class="nav-item" data-mod="metodologia"><span class="ico">🧮</span> Metodologia</div>
     </div>
@@ -323,7 +324,6 @@ body.mod-score .faixa-status{display:none}
         <button class="tab-pill active" data-mod="estrategico" data-tab="visao">👁 Visão Geral</button>
         <button class="tab-pill" data-mod="estrategico" data-tab="recebimentos">💰 Recebimentos</button>
         <button class="tab-pill" data-mod="estrategico" data-tab="eficacia">🎯 Eficácia da cobrança</button>
-        <button class="tab-pill" data-mod="estrategico" data-tab="renegociacoes">🔄 Renegociações</button>
         <button class="tab-pill" data-mod="estrategico" data-tab="composicao">🧩 Composição</button>
       </div>
       <div class="tab active" id="t-este-visao">
@@ -353,20 +353,47 @@ body.mod-score .faixa-status{display:none}
           <div class="panel col-12"><h3>Ranking de eficácia por responsável</h3><div class="p-sub">Amostras pequenas devem ser interpretadas com cautela</div><div class="tbl-wrap"><table id="tbl-eficacia"></table></div></div>
         </div>
       </div>
-      <div class="tab" id="t-este-renegociacoes">
-        <div class="info-note">🔄 <b>Renegociações</b> — considera renegociações ativas no período. Uma renegociação é classificada como <b>Paga</b> somente quando todas as novas faturas ativas vinculadas estão pagas. O campo <b>Atendimento</b> indica a existência de atendimento do tipo exato <b>B2B – COBRANÇA ATIVA</b> antes ou até o fim da janela das novas faturas.</div>
-        <div class="kpis" id="kpis-renegociacoes"></div>
-        <div class="grid">
-          <div class="panel col-12"><h3>Renegociações realizadas</h3><div class="p-sub">Inclui a coluna Atendimento: Sim/Não e a quantidade de atendimentos vinculados</div><div class="tbl-wrap"><table id="tbl-reneg-realizadas"></table></div></div>
-          <div class="panel col-12"><h3>Renegociações pagas</h3><div class="p-sub">Todas as novas faturas da renegociação estão pagas</div><div class="tbl-wrap"><table id="tbl-reneg-pagas"></table></div></div>
-        </div>
-      </div>
       <div class="tab" id="t-este-composicao">
         <div class="grid">
           <div class="panel col-6"><h3>Valor em atraso por grupo</h3><div class="p-sub">Classificação oficial do ERP</div><div class="chart" id="c-grp"></div></div>
           <div class="panel col-6"><h3>Valor em atraso por grupo macro</h3><div class="p-sub">B2C × B2B × Outros</div><div class="chart" id="c-gm"></div></div>
           <div class="panel col-6"><h3>Valor em atraso por plano</h3><div class="p-sub">Top 12 planos</div><div class="chart tall" id="c-plano"></div></div>
           <div class="panel col-6"><h3>Valor em atraso por vendedor</h3><div class="p-sub">Top 12 vendedores — carteira que gerou a dívida</div><div class="chart tall" id="c-vend"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RENEGOCIAÇÕES ============ -->
+    <section class="view" id="v-renegociacoes">
+      <div class="info-note" id="reneg-scope-note">🔄 <b>Módulo de Renegociações</b> — acompanha a conversão de renegociações realizadas em pagas, a atuação de cobrança ativa antes/durante o processo, a distribuição por contrato e a evolução mensal. Os filtros globais são aplicados a todas as visões.</div>
+      <div class="tabs">
+        <button class="tab-pill active" data-mod="renegociacoes" data-tab="visao">📊 Visão Geral</button>
+        <button class="tab-pill" data-mod="renegociacoes" data-tab="eficacia">🎯 Funil &amp; Eficácia</button>
+        <button class="tab-pill" data-mod="renegociacoes" data-tab="bases">🧾 Bases Analíticas</button>
+      </div>
+      <div class="tab active" id="t-renegociacoes-visao">
+        <div class="kpis" id="kpis-renegociacoes"></div>
+        <div class="grid">
+          <div class="panel col-5"><h3>Status das renegociações</h3><div class="p-sub">Pagas versus em acompanhamento no filtro atual</div><div class="chart tall" id="c-reneg-status"></div></div>
+          <div class="panel col-7"><h3>Renegociações por tipo de contrato</h3><div class="p-sub">Volume realizado, pago e com atendimento de cobrança ativa</div><div class="chart tall" id="c-reneg-contrato"></div></div>
+          <div class="panel col-8"><h3>Evolução mensal</h3><div class="p-sub">Barras = quantidade · linha = valor final renegociado (R$)</div><div class="chart tall" id="c-reneg-evolucao"></div></div>
+          <div class="panel col-4"><h3>Cobertura de cobrança ativa</h3><div class="p-sub">Renegociações com atendimento antes ou durante a janela</div><div class="chart tall" id="c-reneg-atendimento"></div></div>
+        </div>
+      </div>
+      <div class="tab" id="t-renegociacoes-eficacia">
+        <div class="kpis" id="kpis-reneg-eficacia"></div>
+        <div class="grid">
+          <div class="panel col-7"><h3>Controle do processo</h3><div class="p-sub">Indicadores de conversão e cobertura — não representam causalidade isolada</div><div class="chart tall" id="c-reneg-funil"></div></div>
+          <div class="panel col-5"><h3>Distribuição de parcelas</h3><div class="p-sub">Quantidade de renegociações por número de parcelas</div><div class="chart tall" id="c-reneg-parcelas"></div></div>
+          <div class="panel col-12"><h3>Análise por contrato</h3><div class="p-sub">Base de renegociações, taxa de pagamento, atendimento e valores</div><div class="tbl-wrap"><table id="tbl-reneg-contrato"></table></div></div>
+          <div class="panel col-12"><h3>Controle mensal auditável</h3><div class="p-sub">Realizadas, pagas, com atendimento, valor final e taxa de pagamento</div><div class="tbl-wrap"><table id="tbl-reneg-mensal"></table></div></div>
+        </div>
+      </div>
+      <div class="tab" id="t-renegociacoes-bases">
+        <div class="info-note">📌 <b>Regra de classificação:</b> Realizada = renegociação ativa com novas faturas vinculadas. Paga = todas as novas faturas ativas vinculadas estão pagas. Atendimento = existência do tipo exato <b>B2B – COBRANÇA ATIVA</b> antes ou até o fim da janela das novas faturas.</div>
+        <div class="grid">
+          <div class="panel col-12"><h3>Renegociações realizadas</h3><div class="p-sub">Inclui contrato, localização, valores, faturas vinculadas e a coluna Atendimento</div><div class="tbl-wrap"><table id="tbl-reneg-realizadas"></table></div></div>
+          <div class="panel col-12"><h3>Renegociações pagas</h3><div class="p-sub">Todas as novas faturas ativas da renegociação estão pagas</div><div class="tbl-wrap"><table id="tbl-reneg-pagas"></table></div></div>
         </div>
       </div>
     </section>
@@ -500,7 +527,7 @@ function faixaDeAtraso(d){
 
 /* ---------- estado global ---------- */
 const state = {emp:[],uf:[],cidade:[],grp:[],contrato:[],gm:[],reg:[],plano:[],tec:[],vend:[],st:[],atraso:[],periodoIni:'',periodoFim:'',busca:'',sortKey:'vencido',sortDir:-1,page:0,pageSize:50};
-const abaAtiva = {estrategico:'visao',tatico:'aging',operacional:'fila'};
+const abaAtiva = {estrategico:'visao',tatico:'aging',operacional:'fila',renegociacoes:'visao'};
 let charts = {};
 
 function setFiltro(k,v){ state[k]=v; state.page=0; renderAtual(); }
@@ -919,18 +946,63 @@ function totaisRegua(rows){
   });
   return {antes,depois};
 }
+function abrirListaRenegociacoes(titulo,lista){
+  const rows=[...lista].sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
+  document.getElementById('modal').innerHTML=`<div class="modal-head"><div><h3>${esc(titulo)}</h3><div class="meta">${fmtNum(rows.length)} renegociações no filtro atual · ${fmtBRL(rows.reduce((s,r)=>s+(Number(r.valor_final)||0),0))} em valor final</div></div><button class="modal-close" onclick="fecharModal()">✕</button></div><div class="tbl-wrap" style="max-height:68vh"><table class="tbl"><thead><tr><th>Cliente</th><th>Contrato</th><th>Cidade/UF</th><th>Data</th><th class="num">Valor final</th><th>Faturas</th><th>Atendimento</th></tr></thead><tbody>${rows.slice(0,500).map(r=>`<tr><td class="cli"><b>${esc(r.cli)}</b></td><td>${esc(r.contrato)}</td><td>${esc(r.cid)}/${esc(r.uf)}</td><td>${fmtData(r.data)}</td><td class="num">${fmtBRL(r.valor_final)}</td><td>${fmtNum(r.qtd_faturas_novas)} / ${fmtNum(r.qtd_faturas_pagas)}</td><td style="color:${r.atendimento?'#34d399':'#fbbf24'}">${r.atendimento?'Sim':'Não'}</td></tr>`).join('')}</tbody></table></div>${rows.length>500?`<div class="meta" style="padding:10px">Exibindo 500 de ${fmtNum(rows.length)} renegociações. Use os filtros para reduzir o conjunto.</div>`:''}`;
+  document.getElementById('overlay').classList.add('open');
+}
 function renderRenegociacoes(){
   const rows=renegociacoesNoPeriodo();
   const pagas=rows.filter(r=>r.paga);
   const comAtendimento=rows.filter(r=>r.atendimento).length;
-  document.getElementById('kpis-renegociacoes').innerHTML=
-    kpi('Renegociações realizadas',fmtNum(rows.length),'renegociações ativas no período','acc','🔄',null)+
-    kpi('Renegociações pagas',fmtNum(pagas.length),rows.length?fmtPct(100*pagas.length/rows.length)+'% das realizadas':'sem registros','ok','✅',null)+
-    kpi('Com atendimento de cobrança',fmtNum(comAtendimento),'aberto antes ou durante a janela','vio','📞',null)+
-    kpi('Valor final renegociado',fmtBRL(rows.reduce((s,r)=>s+(Number(r.valor_final)||0),0)),'soma das renegociações realizadas','warn','💰',null);
-  const tabela=(lista,empty)=>lista.length?'<thead><tr><th>Cliente</th><th>Contrato</th><th>Data</th><th>Tipo</th><th class="num">Parcelas</th><th class="num">Valor final</th><th>Faturas novas/pagas</th><th>Atendimento</th></tr></thead><tbody>'+lista.slice(0,500).map(r=>`<tr><td class="cli"><b>${esc(r.cli)}</b></td><td>${esc(r.contrato)}</td><td>${fmtData(r.data)}</td><td>${esc(r.tipo)}</td><td class="num">${fmtNum(r.parcelas)}</td><td class="num">${fmtBRL(r.valor_final)}</td><td>${fmtNum(r.qtd_faturas_novas)} / ${fmtNum(r.qtd_faturas_pagas)}</td><td style="color:${r.atendimento?'#34d399':'#fbbf24'}"><b>${r.atendimento?'Sim':'Não'}</b>${r.qtd_atendimentos?` · ${fmtNum(r.qtd_atendimentos)}`:''}</td></tr>`).join('')+'</tbody>':`<tbody><tr><td colspan="8" class="meta">${empty}</td></tr></tbody>`;
-  document.getElementById('tbl-reneg-realizadas').innerHTML=tabela(rows,'Nenhuma renegociação encontrada no filtro atual.');
-  document.getElementById('tbl-reneg-pagas').innerHTML=tabela(pagas,'Nenhuma renegociação totalmente paga encontrada no filtro atual.');
+  const valorFinal=rows.reduce((s,r)=>s+(Number(r.valor_final)||0),0);
+  const valorTotal=rows.reduce((s,r)=>s+(Number(r.valor_total)||0),0);
+  const desconto=Math.max(0,valorTotal-valorFinal);
+  const taxaPaga=rows.length?100*pagas.length/rows.length:0;
+  const cobertura=rows.length?100*comAtendimento/rows.length:0;
+  const mediaParcelas=rows.length?rows.reduce((s,r)=>s+(Number(r.parcelas)||0),0)/rows.length:0;
+  const kpiEl=document.getElementById('kpis-renegociacoes');
+  if(!kpiEl) return;
+  kpiEl.innerHTML=
+    kpi('Renegociações realizadas',fmtNum(rows.length),'renegociações ativas no filtro atual','acc','🔄',"abrirListaRenegociacoes('🔄 Renegociações realizadas',renegociacoesNoPeriodo())")+
+    kpi('Renegociações pagas',fmtNum(pagas.length),fmtPct(taxaPaga)+'% das realizadas','ok','✅',"abrirListaRenegociacoes('✅ Renegociações pagas',renegociacoesNoPeriodo().filter(r=>r.paga))")+
+    kpi('Cobertura de cobrança ativa',fmtPct(cobertura)+'%','renegociações com atendimento B2B','vio','📞',"abrirListaRenegociacoes('📞 Renegociações com atendimento',renegociacoesNoPeriodo().filter(r=>r.atendimento))")+
+    kpi('Valor final renegociado',fmtBRL(valorFinal),'soma do valor final','warn','💰',null)+
+    kpi('Desconto nominal',fmtBRL(desconto),'valor total menos valor final','acc','🏷',null)+
+    kpi('Parcelas médias',fmtPct(mediaParcelas),'média de parcelas por renegociação','vio','🧾',null);
+  const byContrato={};
+  rows.forEach(r=>{const k=r.contrato||'Outros'; const z=byContrato[k]??={contrato:k,realizadas:0,pagas:0,atendimento:0,valor:0,total:0,parcelas:0}; z.realizadas++; z.pagas+=r.paga?1:0; z.atendimento+=r.atendimento?1:0; z.valor+=Number(r.valor_final)||0; z.total+=Number(r.valor_total)||0; z.parcelas+=Number(r.parcelas)||0;});
+  const contratoRows=Object.values(byContrato).sort((a,b)=>b.valor-a.valor);
+  const contratoLabels=contratoRows.map(r=>r.contrato);
+  getChart('c-reneg-status')?.setOption({...TEMA,series:[{type:'pie',radius:['43%','70%'],center:['50%','46%'],data:[{name:'Pagas',value:pagas.length,itemStyle:{color:'#34d399'}},{name:'Em acompanhamento',value:Math.max(0,rows.length-pagas.length),itemStyle:{color:'#fbbf24'}}],label:{color:'#c6d2e5',fontSize:11,formatter:'{b}\n{d}%'},labelLine:{lineStyle:{color:'#2a3f66'}}}],graphic:[{type:'text',left:'center',top:'39%',style:{text:fmtNum(rows.length),fill:'#e5ecf6',fontSize:18,fontWeight:800,textAlign:'center'}},{type:'text',left:'center',top:'50%',style:{text:'realizadas',fill:'#8b9bb4',fontSize:10,textAlign:'center'}}]});
+  getChart('c-reneg-contrato')?.setOption({...TEMA,legend:{...TEMA.legend,top:0,left:'center',bottom:null},grid:{...TEMA.grid,left:112,top:30},xAxis:{type:'value',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#16233f'}}},yAxis:{type:'category',data:contratoLabels,axisLabel:{fontSize:10,color:'#c6d2e5'}},series:[{name:'Realizadas',type:'bar',data:contratoRows.map(r=>r.realizadas),itemStyle:{color:'#22d3ee'},barMaxWidth:14},{name:'Pagas',type:'bar',data:contratoRows.map(r=>r.pagas),itemStyle:{color:'#34d399'},barMaxWidth:14},{name:'Com atendimento',type:'bar',data:contratoRows.map(r=>r.atendimento),itemStyle:{color:'#a78bfa'},barMaxWidth:14}]});
+  const mensal={};
+  rows.forEach(r=>{const m=String(r.data||'').slice(0,7)||'—'; const z=mensal[m]??={m,realizadas:0,pagas:0,atendimento:0,valor:0}; z.realizadas++; z.pagas+=r.paga?1:0; z.atendimento+=r.atendimento?1:0; z.valor+=Number(r.valor_final)||0;});
+  const mensalRows=Object.values(mensal).sort((a,b)=>a.m.localeCompare(b.m));
+  const meses=mensalRows.map(r=>r.m);
+  getChart('c-reneg-evolucao')?.setOption({...TEMA,legend:{...TEMA.legend,top:0,left:'center',bottom:null},grid:{...TEMA.grid,top:30},xAxis:{type:'category',data:meses.map(fmtMes),axisLabel:{rotate:meses.length>10?35:0,fontSize:9}},yAxis:[{type:'value',name:'Quantidade',nameTextStyle:{color:'#22d3ee',fontSize:9},axisLabel:{color:'#22d3ee',fontSize:9},splitLine:{lineStyle:{color:'#16233f'}}},{type:'value',name:'R$',nameTextStyle:{color:'#34d399',fontSize:9},axisLabel:{color:'#34d399',fontSize:9,formatter:v=>fmtNum(v)},splitLine:{show:false}}],series:[{name:'Renegociações',type:'bar',data:mensalRows.map(r=>r.realizadas),itemStyle:{color:'#22d3ee'},barMaxWidth:22},{name:'Valor final',type:'line',yAxisIndex:1,data:mensalRows.map(r=>Math.round(r.valor)),smooth:true,symbol:'circle',symbolSize:5,lineStyle:{color:'#34d399',width:2},itemStyle:{color:'#34d399'}}]});
+  getChart('c-reneg-atendimento')?.setOption({...TEMA,series:[{type:'pie',radius:['43%','70%'],center:['50%','46%'],data:[{name:'Com atendimento',value:comAtendimento,itemStyle:{color:'#a78bfa'}},{name:'Sem atendimento',value:Math.max(0,rows.length-comAtendimento),itemStyle:{color:'#334155'}}],label:{color:'#c6d2e5',fontSize:10,formatter:'{b}\n{d}%'},labelLine:{lineStyle:{color:'#2a3f66'}}}],graphic:[{type:'text',left:'center',top:'39%',style:{text:fmtPct(cobertura)+'%',fill:'#e5ecf6',fontSize:18,fontWeight:800,textAlign:'center'}},{type:'text',left:'center',top:'50%',style:{text:'cobertura',fill:'#8b9bb4',fontSize:10,textAlign:'center'}}]});
+  const funilLabels=['Realizadas','Com atendimento','Pagas'];
+  barH('c-reneg-funil',funilLabels,[rows.length,comAtendimento,pagas.length],'#a78bfa',{tooltip:{...TEMA.tooltip,valueFormatter:v=>fmtNum(v)}});
+  const parcelas={}; rows.forEach(r=>{const k=String(r.parcelas||0);parcelas[k]=(parcelas[k]||0)+1;});
+  const parcelaRows=Object.entries(parcelas).sort((a,b)=>Number(a[0])-Number(b[0]));
+  barV('c-reneg-parcelas',parcelaRows.map(r=>r[0]+'x'),parcelaRows.map(r=>r[1]),'#fbbf24');
+  const kpiE=document.getElementById('kpis-reneg-eficacia');
+  if(kpiE) kpiE.innerHTML=kpi('Taxa de pagamento',fmtPct(taxaPaga)+'%','pagas ÷ realizadas','ok','✅',null)+kpi('Cobertura de atendimento',fmtPct(cobertura)+'%','com atendimento ÷ realizadas','vio','📞',null)+kpi('Valor médio final',fmtBRL(rows.length?valorFinal/rows.length:0),'valor final ÷ realizadas','acc','💰',null)+kpi('Desconto médio',fmtBRL(rows.length?desconto/rows.length:0),'desconto nominal por renegociação','warn','🏷',null);
+  const tc=document.getElementById('tbl-reneg-contrato');
+  if(tc) tc.innerHTML='<thead><tr><th>Contrato</th><th class="num">Realizadas</th><th class="num">Pagas</th><th class="num">Taxa paga</th><th class="num">Atendimento</th><th class="num">Cobertura</th><th class="num">Valor final</th><th class="num">Ticket</th><th class="num">Parcelas méd.</th></tr></thead><tbody>'+contratoRows.map(r=>`<tr><td><b>${esc(r.contrato)}</b></td><td class="num">${fmtNum(r.realizadas)}</td><td class="num">${fmtNum(r.pagas)}</td><td class="num">${fmtPct(r.realizadas?100*r.pagas/r.realizadas:0)}%</td><td class="num">${fmtNum(r.atendimento)}</td><td class="num">${fmtPct(r.realizadas?100*r.atendimento/r.realizadas:0)}%</td><td class="num">${fmtBRL(r.valor)}</td><td class="num">${fmtBRL(r.realizadas?r.valor/r.realizadas:0)}</td><td class="num">${fmtPct(r.realizadas?r.parcelas/r.realizadas:0)}</td></tr>`).join('')+'</tbody>';
+  const tm=document.getElementById('tbl-reneg-mensal');
+  if(tm) tm.innerHTML='<thead><tr><th>Mês</th><th class="num">Realizadas</th><th class="num">Pagas</th><th class="num">Taxa paga</th><th class="num">Atendimento</th><th class="num">Cobertura</th><th class="num">Valor final</th><th class="num">Ticket</th></tr></thead><tbody>'+mensalRows.map(r=>`<tr><td><b>${esc(fmtMes(r.m))}</b></td><td class="num">${fmtNum(r.realizadas)}</td><td class="num">${fmtNum(r.pagas)}</td><td class="num">${fmtPct(r.realizadas?100*r.pagas/r.realizadas:0)}%</td><td class="num">${fmtNum(r.atendimento)}</td><td class="num">${fmtPct(r.realizadas?100*r.atendimento/r.realizadas:0)}%</td><td class="num">${fmtBRL(r.valor)}</td><td class="num">${fmtBRL(r.realizadas?r.valor/r.realizadas:0)}</td></tr>`).join('')+'</tbody>';
+  const tabela=(lista,empty)=>lista.length?'<thead><tr><th>Cliente</th><th>Contrato</th><th>Cidade/UF</th><th>Data</th><th>Tipo</th><th class="num">Parcelas</th><th class="num">Valor total</th><th class="num">Valor final</th><th class="num">Desconto</th><th>Faturas novas/pagas</th><th>Atendimento</th></tr></thead><tbody>'+lista.slice(0,1000).map(r=>`<tr><td class="cli"><b>${esc(r.cli)}</b></td><td>${esc(r.contrato)}</td><td>${esc(r.cid)}/${esc(r.uf)}</td><td>${fmtData(r.data)}</td><td>${esc(r.tipo)}</td><td class="num">${fmtNum(r.parcelas)}</td><td class="num">${fmtBRL(r.valor_total)}</td><td class="num">${fmtBRL(r.valor_final)}</td><td class="num">${fmtBRL(Math.max(0,(Number(r.valor_total)||0)-(Number(r.valor_final)||0)))}</td><td>${fmtNum(r.qtd_faturas_novas)} / ${fmtNum(r.qtd_faturas_pagas)}</td><td style="color:${r.atendimento?'#34d399':'#fbbf24'}"><b>${r.atendimento?'Sim':'Não'}</b>${r.qtd_atendimentos?` · ${fmtNum(r.qtd_atendimentos)}`:''}</td></tr>`).join('')+'</tbody>':`<tbody><tr><td colspan="11" class="meta">${empty}</td></tr></tbody>`;
+  const tr=document.getElementById('tbl-reneg-realizadas'), tp=document.getElementById('tbl-reneg-pagas');
+  if(tr) tr.innerHTML=tabela(rows,'Nenhuma renegociação encontrada no filtro atual.');
+  if(tp) tp.innerHTML=tabela(pagas,'Nenhuma renegociação totalmente paga encontrada no filtro atual.');
+  registrarDrill('c-reneg-status',p=>abrirListaRenegociacoes('🔄 '+esc(p.name),p.name==='Pagas'?rows.filter(r=>r.paga):rows.filter(r=>!r.paga)));
+  registrarDrill('c-reneg-contrato',p=>abrirListaRenegociacoes('🔄 Contrato '+esc(p.name),rows.filter(r=>r.contrato===p.name)));
+  registrarDrill('c-reneg-evolucao',p=>abrirListaRenegociacoes('📅 Renegociações — '+esc(meses[p.dataIndex]||''),rows.filter(r=>String(r.data||'').slice(0,7)===meses[p.dataIndex])));
+  registrarDrill('c-reneg-atendimento',p=>abrirListaRenegociacoes('📞 '+esc(p.name),p.name==='Com atendimento'?rows.filter(r=>r.atendimento):rows.filter(r=>!r.atendimento)));
+  registrarDrill('c-reneg-funil',p=>abrirListaRenegociacoes('🎯 '+esc(p.name),p.name==='Pagas'?pagas:p.name==='Com atendimento'?rows.filter(r=>r.atendimento):rows));
+  registrarDrill('c-reneg-parcelas',p=>abrirListaRenegociacoes('🧾 '+esc(p.name),rows.filter(r=>String(r.parcelas||0)+'x'===p.name)));
 }
 function renderEficacia(){
   const d=filtrados();
@@ -1362,6 +1434,7 @@ const TITULOS={estrategico:['Visão Executiva','Recebimentos confirmados, estoqu
   tatico:['Visão Tática','Planos de recuperação — envelhecimento da dívida, segmentação e geografia da inadimplência.'],
   operacional:['Visão Operacional','Fila de cobrança — o devedor, o valor, o envelhecimento e o contato. Exporte para a equipe de cobrança.'],
   desempenho:['Desempenho','Evolução mensal e variação percentual da inadimplência, dos recebimentos e dos atendimentos.'],
+  renegociacoes:['Renegociações','Módulo analítico de renegociações — conversão em pagamentos, cobertura da cobrança ativa, contrato, parcelas e bases detalhadas.'],
   metodologia:['Metodologia','Como o painel é calculado — definições, escopo, aging e regras de cobrança.']};
 function trocarModulo(mod){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.mod===mod));
@@ -1379,6 +1452,7 @@ function renderModulo(mod){
   if(mod==='tatico'){ const t=abaAtiva.tatico; if(t==='aging'){renderKpisAging();renderTatAging();} if(t==='segmentacao')renderTatSegmentacao(); if(t==='geografia')renderTatGeografia(); }
   if(mod==='operacional'){ const t=abaAtiva.operacional; if(t==='fila')renderFila(); if(t==='rankings')renderRankings(); }
   if(mod==='desempenho') renderDesempenho();
+  if(mod==='renegociacoes') renderRenegociacoes();
   if(mod==='metodologia') renderMetodologia();
   setTimeout(()=>Object.values(charts).forEach(c=>c.resize()),60);
 }
