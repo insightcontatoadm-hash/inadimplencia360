@@ -383,6 +383,9 @@ body.mod-score .faixa-status{display:none}
       <div class="tab" id="t-renegociacoes-eficacia">
         <div class="kpis" id="kpis-reneg-eficacia"></div>
         <div class="grid">
+          <div class="panel col-7"><h3>Relação da eficácia da cobrança</h3><div class="p-sub">Faturas vencidas, atendimentos de cobrança e pagamentos recebidos no mesmo universo</div><div class="chart tall" id="c-reneg-cobranca"></div></div>
+          <div class="panel col-5"><h3>Eficácia da régua de cobrança</h3><div class="p-sub">Pagamentos antes/no vencimento versus após o vencimento</div><div class="chart tall" id="c-reneg-regua"></div></div>
+          <div class="panel col-12"><h3>Memória de cálculo da eficácia</h3><div class="p-sub">Rastreabilidade dos indicadores e dos universos comparados</div><div class="tbl-wrap"><table id="tbl-reneg-cobranca"></table></div></div>
           <div class="panel col-7"><h3>Controle do processo</h3><div class="p-sub">Indicadores de conversão e cobertura — não representam causalidade isolada</div><div class="chart tall" id="c-reneg-funil"></div></div>
           <div class="panel col-5"><h3>Distribuição de parcelas</h3><div class="p-sub">Quantidade de renegociações por número de parcelas</div><div class="chart tall" id="c-reneg-parcelas"></div></div>
           <div class="panel col-12"><h3>Análise por contrato</h3><div class="p-sub">Base de renegociações, taxa de pagamento, atendimento e valores</div><div class="tbl-wrap"><table id="tbl-reneg-contrato"></table></div></div>
@@ -953,8 +956,14 @@ function abrirListaRenegociacoes(titulo,lista){
 }
 function renderRenegociacoes(){
   const rows=renegociacoesNoPeriodo();
+  const d=filtrados();
+  const fila=atendimentosB2BNoPeriodo();
   const pagas=rows.filter(r=>r.paga);
   const comAtendimento=rows.filter(r=>r.atendimento).length;
+  const faturasVencidas=d.reduce((s,r)=>s+(Number(r.eficacia_faturas_vencidas)||0),0);
+  const pagamentosRecebidos=d.reduce((s,r)=>s+(Number(r.eficacia_pagamentos_recebidos)||0),0);
+  const regua=totaisRegua(d);
+  const eficaciaCobranca=faturasVencidas?100*pagamentosRecebidos/faturasVencidas:0;
   const valorFinal=rows.reduce((s,r)=>s+(Number(r.valor_final)||0),0);
   const valorTotal=rows.reduce((s,r)=>s+(Number(r.valor_total)||0),0);
   const desconto=Math.max(0,valorTotal-valorFinal);
@@ -984,11 +993,15 @@ function renderRenegociacoes(){
   getChart('c-reneg-atendimento')?.setOption({...TEMA,series:[{type:'pie',radius:['43%','70%'],center:['50%','46%'],data:[{name:'Com atendimento',value:comAtendimento,itemStyle:{color:'#a78bfa'}},{name:'Sem atendimento',value:Math.max(0,rows.length-comAtendimento),itemStyle:{color:'#334155'}}],label:{color:'#c6d2e5',fontSize:10,formatter:'{b}\n{d}%'},labelLine:{lineStyle:{color:'#2a3f66'}}}],graphic:[{type:'text',left:'center',top:'39%',style:{text:fmtPct(cobertura)+'%',fill:'#e5ecf6',fontSize:18,fontWeight:800,textAlign:'center'}},{type:'text',left:'center',top:'50%',style:{text:'cobertura',fill:'#8b9bb4',fontSize:10,textAlign:'center'}}]});
   const funilLabels=['Realizadas','Com atendimento','Pagas'];
   barH('c-reneg-funil',funilLabels,[rows.length,comAtendimento,pagas.length],'#a78bfa',{tooltip:{...TEMA.tooltip,valueFormatter:v=>fmtNum(v)}});
+  barV('c-reneg-cobranca',['Faturas vencidas','Atendimentos','Pagamentos recebidos'],[faturasVencidas,fila.length,pagamentosRecebidos],'#22d3ee');
+  barV('c-reneg-regua',['Antes/no vencimento','Após vencimento'],[regua.antes,regua.depois],'#34d399');
+  const tcob=document.getElementById('tbl-reneg-cobranca');
+  if(tcob) tcob.innerHTML='<thead><tr><th>Indicador</th><th class="num">Quantidade</th><th>Fórmula / universo</th></tr></thead><tbody><tr><td>Faturas vencidas</td><td class="num">'+fmtNum(faturasVencidas)+'</td><td>faturas com vencimento nos últimos 13 meses</td></tr><tr><td>Atendimentos de cobrança</td><td class="num">'+fmtNum(fila.length)+'</td><td>tipo exato B2B – COBRANÇA ATIVA, deduplicado por atendimento</td></tr><tr><td>Pagamentos recebidos</td><td class="num">'+fmtNum(pagamentosRecebidos)+'</td><td>faturas pagas na mesma janela e universo de serviços</td></tr><tr><td><b>Eficácia da cobrança</b></td><td class="num"><b>'+fmtPct(eficaciaCobranca)+'%</b></td><td>pagamentos recebidos ÷ faturas vencidas</td></tr><tr><td>Antes/no vencimento</td><td class="num">'+fmtNum(regua.antes)+'</td><td>pagamentos até a data de vencimento</td></tr><tr><td>Após vencimento</td><td class="num">'+fmtNum(regua.depois)+'</td><td>pagamentos depois da data de vencimento</td></tr></tbody>';
   const parcelas={}; rows.forEach(r=>{const k=String(r.parcelas||0);parcelas[k]=(parcelas[k]||0)+1;});
   const parcelaRows=Object.entries(parcelas).sort((a,b)=>Number(a[0])-Number(b[0]));
   barV('c-reneg-parcelas',parcelaRows.map(r=>r[0]+'x'),parcelaRows.map(r=>r[1]),'#fbbf24');
   const kpiE=document.getElementById('kpis-reneg-eficacia');
-  if(kpiE) kpiE.innerHTML=kpi('Taxa de pagamento',fmtPct(taxaPaga)+'%','pagas ÷ realizadas','ok','✅',null)+kpi('Cobertura de atendimento',fmtPct(cobertura)+'%','com atendimento ÷ realizadas','vio','📞',null)+kpi('Valor médio final',fmtBRL(rows.length?valorFinal/rows.length:0),'valor final ÷ realizadas','acc','💰',null)+kpi('Desconto médio',fmtBRL(rows.length?desconto/rows.length:0),'desconto nominal por renegociação','warn','🏷',null);
+  if(kpiE) kpiE.innerHTML=kpi('Faturas vencidas na janela',fmtNum(faturasVencidas),'base da eficácia — últimos 13 meses','alert','🧾',null)+kpi('Atendimentos de cobrança',fmtNum(fila.length),'tipo exato B2B – COBRANÇA ATIVA','acc','📞',null)+kpi('Pagamentos recebidos na janela',fmtNum(pagamentosRecebidos),'faturas pagas na mesma janela','ok','💰',null)+kpi('Eficácia da cobrança',fmtPct(eficaciaCobranca)+'%','pagamentos ÷ faturas vencidas','vio','🎯',null)+kpi('Taxa de pagamento',fmtPct(taxaPaga)+'%','pagas ÷ realizadas','ok','✅',null)+kpi('Cobertura de atendimento',fmtPct(cobertura)+'%','com atendimento ÷ realizadas','vio','📞',null)+kpi('Valor médio final',fmtBRL(rows.length?valorFinal/rows.length:0),'valor final ÷ realizadas','acc','💰',null)+kpi('Desconto médio',fmtBRL(rows.length?desconto/rows.length:0),'desconto nominal por renegociação','warn','🏷',null);
   const tc=document.getElementById('tbl-reneg-contrato');
   if(tc) tc.innerHTML='<thead><tr><th>Contrato</th><th class="num">Realizadas</th><th class="num">Pagas</th><th class="num">Taxa paga</th><th class="num">Atendimento</th><th class="num">Cobertura</th><th class="num">Valor final</th><th class="num">Ticket</th><th class="num">Parcelas méd.</th></tr></thead><tbody>'+contratoRows.map(r=>`<tr><td><b>${esc(r.contrato)}</b></td><td class="num">${fmtNum(r.realizadas)}</td><td class="num">${fmtNum(r.pagas)}</td><td class="num">${fmtPct(r.realizadas?100*r.pagas/r.realizadas:0)}%</td><td class="num">${fmtNum(r.atendimento)}</td><td class="num">${fmtPct(r.realizadas?100*r.atendimento/r.realizadas:0)}%</td><td class="num">${fmtBRL(r.valor)}</td><td class="num">${fmtBRL(r.realizadas?r.valor/r.realizadas:0)}</td><td class="num">${fmtPct(r.realizadas?r.parcelas/r.realizadas:0)}</td></tr>`).join('')+'</tbody>';
   const tm=document.getElementById('tbl-reneg-mensal');
