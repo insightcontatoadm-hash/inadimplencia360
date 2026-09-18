@@ -1462,6 +1462,10 @@ function detalhesTabela(id,tr){
     return {title:`${nomeTabela(id)}${chave?' — '+chave:''}`,headers:['Cliente','Renegociação','Contrato','Cidade/UF','Data','Tipo','Parcelas','Valor total','Valor final','Faturas novas/pagas','Paga','Atendimento'],rows:rows.map(detalheRenegociacao)};
   }
   let rows=filtrados();
+  if(id==='tbl-topdev') rows=[...rows].sort((a,b)=>b.vencido-a.vencido).slice(0,12);
+  if(id==='tbl-criticos') rows=[...rows].filter(x=>x.datraso>90).sort((a,b)=>b.vencido-a.vencido).slice(0,20);
+  if(id==='tbl-rank-valor') rows=[...rows].sort((a,b)=>b.vencido-a.vencido).slice(0,15);
+  if(id==='tbl-rank-atraso') rows=[...rows].filter(x=>x.vencido>0).sort((a,b)=>b.datraso-a.datraso||b.vencido-a.vencido).slice(0,15);
   if(id==='tbl-hist-mensal'||id==='tbl-desempenho'){
     const m=mesTabela(chave); if(m) rows=rows.filter(x=>(x.inad_meses&&x.inad_meses[m])||(x.rec_meses&&x.rec_meses[m])||(x.atd_meses&&x.atd_meses[m]));
   } else if(id==='tbl-hist-grupo'&&chave){
