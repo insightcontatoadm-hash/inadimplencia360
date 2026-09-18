@@ -601,6 +601,7 @@ function renderTodosModulos(){
   renderKpisGerais(); renderEsteVisao(); renderEsteEvolucao(); renderRecebimentos(); renderEficacia(); renderRenegociacoes(); renderEsteComposicao();
   renderKpisAging(); renderTatAging(); renderTatSegmentacao(); renderTatGeografia();
   renderFila(); renderRankings(); renderDesempenho(); renderHistorico();
+  melhorarTabelas(); registrarCliqueTabelas();
   const sync=document.getElementById('f-sync'); if(sync) sync.textContent='✓ filtros aplicados em todos os módulos';
   setTimeout(()=>Object.values(charts).forEach(c=>c.resize()),80);
 }
@@ -1405,6 +1406,58 @@ function abrirModal(id){
   </div>`;
   document.getElementById('overlay').classList.add('open');
 }
+/* ---------- tabelas: abrir relação e exportar para Excel ---------- */
+function nomeTabela(id){
+  const el=document.getElementById(id);
+  const h=el?.closest('.panel')?.querySelector('h3');
+  return (h?.textContent||id).trim();
+}
+function matrizTabela(id){
+  const table=document.getElementById(id);
+  if(!table) return [];
+  return Array.from(table.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(c=>String(c.innerText||c.textContent||'').replace(/\s+/g,' ').trim()));
+}
+function escExcelHtml(v){ return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nomeArquivoExcel(id){
+  return (nomeTabela(id)||id).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'').toLowerCase()||'relacao';
+}
+function exportarTabelaExcel(id){
+  const rows=matrizTabela(id);
+  if(rows.length<2){ alert('Esta tabela não possui dados para exportar.'); return; }
+  const table=rows.map((r,i)=>'<tr>'+r.map(v=>`<${i?'td':'th'}>${escExcelHtml(v)}</${i?'td':'th'}>`).join('')+'</tr>').join('');
+  const doc='\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>body{font-family:Arial}table{border-collapse:collapse}th,td{border:1px solid #b8c7dc;padding:6px}th{background:#dbeafe;font-weight:bold}</style></head><body><table>'+table+'</table></body></html>';
+  const blob=new Blob([doc],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nomeArquivoExcel(id)+'.xls'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function abrirTabelaRelacion(id){
+  const rows=matrizTabela(id);
+  if(!rows.length) return;
+  window.__tabelaExcelAtual=id;
+  const body=rows.slice(1).map(r=>'<tr>'+r.map(v=>`<td>${escExcelHtml(v)}</td>`).join('')+'</tr>').join('');
+  document.getElementById('modal').innerHTML=`<div class="modal-head"><div><h3>${esc(nomeTabela(id))}</h3><div class="meta">${fmtNum(Math.max(0,rows.length-1))} linhas exibidas · clique em Excel para baixar esta relação</div></div><div style="display:flex;gap:8px;align-items:center"><button class="export-btn" onclick="exportarTabelaExcel('${id}')">⬇ Excel</button><button class="modal-close" onclick="fecharModal()">✕</button></div></div><div class="tbl-wrap" style="max-height:70vh"><table class="tbl"><thead><tr>${rows[0].map(v=>`<th>${escExcelHtml(v)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+function melhorarTabelas(){
+  document.querySelectorAll('table[id^="tbl-"]').forEach(table=>{
+    const id=table.id, wrap=table.closest('.tbl-wrap');
+    if(!wrap||wrap.dataset.tools==='1') return;
+    wrap.dataset.tools='1';
+    const tools=document.createElement('div'); tools.className='table-tools'; tools.style.cssText='display:flex;justify-content:flex-end;gap:8px;margin:0 0 8px';
+    tools.innerHTML=`<button class="export-btn" type="button" onclick="abrirTabelaRelacion('${id}')">↗ Abrir relação</button><button class="export-btn" type="button" onclick="exportarTabelaExcel('${id}')">⬇ Excel</button>`;
+    wrap.parentNode.insertBefore(tools,wrap);
+    table.querySelectorAll('tbody tr').forEach(tr=>{ if(!tr.getAttribute('onclick')){tr.style.cursor='pointer';tr.title='Clique para abrir a relação';} });
+  });
+}
+function registrarCliqueTabelas(){
+  if(window.__tabelasDelegadas) return;
+  window.__tabelasDelegadas=true;
+  document.addEventListener('click',e=>{
+    const tr=e.target.closest?.('table[id^="tbl-"] tbody tr');
+    if(!tr||tr.getAttribute('onclick')||e.target.closest('button,a')) return;
+    abrirTabelaRelacion(tr.closest('table').id);
+  });
+}
+
 function fecharModal(){ document.getElementById('overlay').classList.remove('open'); }
 
 /* ================= METODOLOGIA ================= */
