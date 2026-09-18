@@ -830,7 +830,8 @@ function renderListaDevedores(){
     <div><h3>${window.__listaTitulo}</h3>
       <div class="meta">${fmtNum(n)} serviços · ${fmtNum(cli)} clientes · valor em atraso ${fmtBRL(venc)}</div></div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="export-btn" onclick="baixarCSVLista()">⬇ Baixar CSV</button>
+      <button class="export-btn" onclick="baixarExcelLista()">⬇ Excel detalhado</button>
+      <button class="export-btn" onclick="baixarCSVLista()">⬇ CSV</button>
       <button class="modal-close" onclick="fecharModal()">✕</button>
     </div>
   </div>
@@ -856,6 +857,12 @@ function baixarCSVLista(){
   const csv='\ufeff'+cols.join(';')+'\n'+linhas.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='inadimplentes.csv'; a.click();
+}
+function baixarExcelLista(){
+  const lista=window.__listaAtual||[];
+  const headers=['Cliente','Serviço','Empresa','Cidade/UF','Plano','Grupo','Contrato','Status','Mensalidade','Valor em atraso','Cobranças vencidas','Atraso','Venc. antigo','Vendedor','Telefone','E-mail'];
+  const rows=lista.map(x=>[x.cli,x.id,x.empn,`${x.cid||'—'}/${x.uf||'—'}`,x.plano,x.grp,contratoCanonico(x),ATIVO_LABEL[x.st]||x.st,fmtBRL(x.mens),fmtBRL(x.vencido),x.qtd_venc,`${x.datraso||0}d`,fmtData(x.vma),x.vend||'—',x.tel||'—',x.email||'—']);
+  baixarMatrizExcel('lista_devedores',headers,rows);
 }
 
 /* ================= MÓDULO ESTRATÉGICO ================= */
@@ -1421,20 +1428,63 @@ function escExcelHtml(v){ return String(v??'').replace(/&/g,'&amp;').replace(/</
 function nomeArquivoExcel(id){
   return (nomeTabela(id)||id).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'').toLowerCase()||'relacao';
 }
-function exportarTabelaExcel(id){
-  const rows=matrizTabela(id);
-  if(rows.length<2){ alert('Esta tabela não possui dados para exportar.'); return; }
-  const table=rows.map((r,i)=>'<tr>'+r.map(v=>`<${i?'td':'th'}>${escExcelHtml(v)}</${i?'td':'th'}>`).join('')+'</tr>').join('');
+function detalheDado(x){ return [x.cli,x.id,x.empn,`${x.cid||'—'}/${x.uf||'—'}`,x.plano,x.grp,contratoCanonico(x),ATIVO_LABEL[x.st]||x.st,fmtBRL(x.vencido),`${x.datraso||0}d`,fmtData(x.vma),x.tel||'—',x.email||'—']; }
+function detalheAtendimento(x){ return [x.cli,x.id_atendimento||x.id||'—',x.id_servico||'—',`${x.cid||'—'}/${x.uf||'—'}`,fmtData(x.data),x.status||'—',x.fechamento||'Ainda não fechado',x.responsavel||'Não informado',x.pagamento?'Sim':'Não',fmtBRL(x.valor_associado)]; }
+function detalheRenegociacao(x){ return [x.cli,x.id_renegociacao||x.id||'—',x.contrato||'Outros',`${x.cid||'—'}/${x.uf||'—'}`,fmtData(x.data),x.tipo||'—',fmtNum(x.parcelas),fmtBRL(x.valor_total),fmtBRL(x.valor_final),`${fmtNum(x.qtd_faturas_novas)} / ${fmtNum(x.qtd_faturas_pagas)}`,x.paga?'Sim':'Não',x.atendimento?'Sim':'Não']; }
+function mesTabela(v){ const m=String(v||'').match(/^(\d{2})\/(\d{4})$/); return m?`${m[2]}-${m[1]}`:String(v||''); }
+function detalhesTabela(id,tr){
+  const cells=tr?[...tr.children].map(c=>String(c.innerText||c.textContent||'').replace(/\s+/g,' ').trim()):[];
+  const chave=cells[0]||'';
+  const atdIds=['tbl-reneg-fechamento','tbl-reneg-usuario','tbl-eficacia'];
+  if(atdIds.includes(id)){
+    let rows=atendimentosB2BNoPeriodo();
+    if(chave){
+      if(id==='tbl-reneg-fechamento') rows=rows.filter(x=>(x.fechamento||'Ainda não fechado')===chave);
+      if(id==='tbl-reneg-usuario') rows=rows.filter(x=>(x.responsavel||'Não informado')===chave);
+      if(id==='tbl-eficacia') rows=rows.filter(x=>(x.tipo||'—')===chave);
+    }
+    return {title:`${nomeTabela(id)}${chave?' — '+chave:''}`,headers:['Cliente','Atendimento','Serviço','Cidade/UF','Abertura','Status','Fechamento','Responsável','Pagamento','Valor associado'],rows:rows.map(detalheAtendimento)};
+  }
+  if(id==='tbl-reneg-cobranca'){
+    let rows=filtrados();
+    if(chave==='Atendimentos de cobrança') return {title:`${nomeTabela(id)} — ${chave}`,headers:['Cliente','Atendimento','Serviço','Cidade/UF','Abertura','Status','Fechamento','Responsável','Pagamento','Valor associado'],rows:atendimentosB2BNoPeriodo().map(detalheAtendimento)};
+    if(chave==='Faturas vencidas') rows=rows.filter(x=>(Number(x.eficacia_faturas_vencidas)||0)>0);
+    if(chave==='Pagamentos recebidos') rows=rows.filter(x=>(Number(x.eficacia_pagamentos_recebidos)||0)>0);
+    return {title:`${nomeTabela(id)}${chave?' — '+chave:''}`,headers:['Cliente','Serviço','Empresa','Cidade/UF','Plano','Grupo','Contrato','Status','Vencido','Atraso','Venc. antigo','Telefone','E-mail'],rows:rows.map(detalheDado)};
+  }
+  const renegIds=['tbl-reneg-contrato','tbl-reneg-mensal','tbl-reneg-realizadas','tbl-reneg-pagas'];
+  if(renegIds.includes(id)){
+    let rows=renegociacoesNoPeriodo();
+    if(id==='tbl-reneg-contrato'&&chave) rows=rows.filter(x=>(x.contrato||'Outros')===chave);
+    if(id==='tbl-reneg-mensal'&&chave){const m=mesTabela(chave);rows=rows.filter(x=>String(x.data||'').slice(0,7)===m);}
+    if(id==='tbl-reneg-pagas') rows=rows.filter(x=>x.paga);
+    if((id==='tbl-reneg-realizadas'||id==='tbl-reneg-pagas')&&chave) rows=rows.filter(x=>x.cli===chave);
+    return {title:`${nomeTabela(id)}${chave?' — '+chave:''}`,headers:['Cliente','Renegociação','Contrato','Cidade/UF','Data','Tipo','Parcelas','Valor total','Valor final','Faturas novas/pagas','Paga','Atendimento'],rows:rows.map(detalheRenegociacao)};
+  }
+  let rows=filtrados();
+  if(id==='tbl-hist-mensal'||id==='tbl-desempenho'){
+    const m=mesTabela(chave); if(m) rows=rows.filter(x=>(x.inad_meses&&x.inad_meses[m])||(x.rec_meses&&x.rec_meses[m])||(x.atd_meses&&x.atd_meses[m]));
+  } else if(id==='tbl-hist-grupo'&&chave){
+    rows=rows.filter(x=>contratoCanonico(x)===chave&&(cells[1]?String(x.grp||'Sem grupo')===cells[1]:true));
+  } else if(chave && ['tbl-cidades'].includes(id)) rows=rows.filter(x=>(x.cid||'—')===chave);
+  return {title:`${nomeTabela(id)}${chave?' — '+chave:''}`,headers:['Cliente','Serviço','Empresa','Cidade/UF','Plano','Grupo','Contrato','Status','Vencido','Atraso','Venc. antigo','Telefone','E-mail'],rows:rows.map(detalheDado)};
+}
+function baixarMatrizExcel(id,headers,rows){
+  if(!rows.length){ alert('Não há clientes detalhados para exportar neste recorte.'); return; }
+  const matrix=[headers,...rows];
+  const table=matrix.map((r,i)=>'<tr>'+r.map(v=>`<${i?'td':'th'}>${escExcelHtml(v)}</${i?'td':'th'}>`).join('')+'</tr>').join('');
   const doc='\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>body{font-family:Arial}table{border-collapse:collapse}th,td{border:1px solid #b8c7dc;padding:6px}th{background:#dbeafe;font-weight:bold}</style></head><body><table>'+table+'</table></body></html>';
   const blob=new Blob([doc],{type:'application/vnd.ms-excel;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nomeArquivoExcel(id)+'.xls'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nomeArquivoExcel(id)+'_detalhado.xls'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-function abrirTabelaRelacion(id){
-  const rows=matrizTabela(id);
-  if(!rows.length) return;
-  window.__tabelaExcelAtual=id;
-  const body=rows.slice(1).map(r=>'<tr>'+r.map(v=>`<td>${escExcelHtml(v)}</td>`).join('')+'</tr>').join('');
-  document.getElementById('modal').innerHTML=`<div class="modal-head"><div><h3>${esc(nomeTabela(id))}</h3><div class="meta">${fmtNum(Math.max(0,rows.length-1))} linhas exibidas · clique em Excel para baixar esta relação</div></div><div style="display:flex;gap:8px;align-items:center"><button class="export-btn" onclick="exportarTabelaExcel('${id}')">⬇ Excel</button><button class="modal-close" onclick="fecharModal()">✕</button></div></div><div class="tbl-wrap" style="max-height:70vh"><table class="tbl"><thead><tr>${rows[0].map(v=>`<th>${escExcelHtml(v)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+function exportarDetalheExcel(){ const d=window.__tabelaDetalhe; if(d) baixarMatrizExcel(d.id,d.headers,d.rows); }
+function exportarTabelaExcel(id){ const d=detalhesTabela(id,null); baixarMatrizExcel(id,d.headers,d.rows); }
+function abrirTabelaRelacion(id,tr){
+  const d=detalhesTabela(id,tr);
+  if(!d.rows.length){ alert('Não há clientes detalhados neste recorte.'); return; }
+  window.__tabelaDetalhe={...d,id};
+  const body=d.rows.slice(0,500).map(r=>'<tr>'+r.map(v=>`<td>${escExcelHtml(v)}</td>`).join('')+'</tr>').join('');
+  document.getElementById('modal').innerHTML=`<div class="modal-head"><div><h3>${esc(d.title)}</h3><div class="meta">${fmtNum(d.rows.length)} registros detalhados de clientes/atendimentos · filtros atuais preservados${d.rows.length>500?' · exibindo 500 na janela, exportação completa':''}</div></div><div style="display:flex;gap:8px;align-items:center"><button class="export-btn" onclick="exportarDetalheExcel()">⬇ Excel detalhado</button><button class="modal-close" onclick="fecharModal()">✕</button></div></div><div class="tbl-wrap" style="max-height:70vh"><table class="tbl"><thead><tr>${d.headers.map(v=>`<th>${escExcelHtml(v)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
   document.getElementById('overlay').classList.add('open');
 }
 function melhorarTabelas(){
@@ -1454,7 +1504,7 @@ function registrarCliqueTabelas(){
   document.addEventListener('click',e=>{
     const tr=e.target.closest?.('table[id^="tbl-"] tbody tr');
     if(!tr||tr.getAttribute('onclick')||e.target.closest('button,a')) return;
-    abrirTabelaRelacion(tr.closest('table').id);
+    abrirTabelaRelacion(tr.closest('table').id,tr);
   });
 }
 
